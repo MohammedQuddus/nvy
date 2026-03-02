@@ -6,12 +6,14 @@
 #   make test     — run tests
 #   make clean    — remove build artefacts
 
-BINARY     := nvy
-VERSION    ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-GOFLAGS    := -trimpath
-LDFLAGS    := -s -w -X github.com/trevorphillipscoding/nvy/cmd.Version=$(VERSION)
+BINARY             := nvy
+VERSION            ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+GOFLAGS            := -trimpath
+LDFLAGS            := -s -w -X github.com/trevorphillipscoding/nvy/cmd.Version=$(VERSION)
+COVERAGE_THRESHOLD := 65
+COVER_PKGS         := ./internal/...,./plugins/...
 
-.PHONY: all build install test clean deps
+.PHONY: all build install test clean deps cover cover-check
 
 all: build
 
@@ -26,6 +28,20 @@ install:
 ## test: run all tests
 test:
 	go test ./...
+
+## cover: run tests and show coverage report
+cover:
+	go test -coverprofile=coverage.out -coverpkg=$(COVER_PKGS) ./...
+	go tool cover -func=coverage.out
+
+## cover-check: fail if total coverage is below $(COVERAGE_THRESHOLD)%
+cover-check:
+	go test -coverprofile=coverage.out -coverpkg=$(COVER_PKGS) ./...
+	@TOTAL=$$(go tool cover -func=coverage.out | awk '/^total:/{print $$3}' | tr -d '%'); \
+	echo "Coverage: $${TOTAL}%"; \
+	awk -v t="$${TOTAL}" -v threshold=$(COVERAGE_THRESHOLD) \
+	  'BEGIN { if (t+0 < threshold+0) { print "FAIL: coverage " t "% is below required " threshold "%"; exit 1 } \
+	           else { print "PASS: coverage " t "% meets threshold " threshold "%" } }'
 
 ## tidy: tidy and verify go modules
 tidy:

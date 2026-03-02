@@ -2,6 +2,7 @@ package state
 
 import (
 	"os"
+	"slices"
 	"testing"
 
 	"github.com/trevorphillipscoding/nvy/internal/env"
@@ -83,5 +84,103 @@ func TestAtomicWrite(t *testing.T) {
 	v, _ := GetGlobal("go")
 	if v != "1.21.0" {
 		t.Errorf("expected 1.21.0 after overwrite, got %s", v)
+	}
+}
+
+func TestDeleteGlobal(t *testing.T) {
+	t.Setenv("NVY_DIR", t.TempDir())
+
+	SetGlobal("go", "1.22.1")   //nolint:errcheck
+	SetGlobal("node", "20.0.0") //nolint:errcheck
+
+	if err := DeleteGlobal("go"); err != nil {
+		t.Fatalf("DeleteGlobal: %v", err)
+	}
+
+	_, ok := GetGlobal("go")
+	if ok {
+		t.Error("go should be absent after DeleteGlobal")
+	}
+
+	// node must still be present.
+	v, ok := GetGlobal("node")
+	if !ok || v != "20.0.0" {
+		t.Errorf("node should still be set, got %q %v", v, ok)
+	}
+}
+
+func TestDeleteGlobal_Noop(t *testing.T) {
+	t.Setenv("NVY_DIR", t.TempDir())
+
+	// Deleting a tool that was never set should not error.
+	if err := DeleteGlobal("python"); err != nil {
+		t.Errorf("DeleteGlobal on unset tool: %v", err)
+	}
+}
+
+func TestRegisterAndLookupShims(t *testing.T) {
+	t.Setenv("NVY_DIR", t.TempDir())
+
+	if err := RegisterShims("go", []string{"go", "gofmt"}); err != nil {
+		t.Fatalf("RegisterShims: %v", err)
+	}
+
+	tool, ok := LookupShim("go")
+	if !ok || tool != "go" {
+		t.Errorf("LookupShim(go) = %q, %v; want go, true", tool, ok)
+	}
+
+	tool, ok = LookupShim("gofmt")
+	if !ok || tool != "go" {
+		t.Errorf("LookupShim(gofmt) = %q, %v; want go, true", tool, ok)
+	}
+
+	_, ok = LookupShim("node")
+	if ok {
+		t.Error("LookupShim(node) should return false for unregistered binary")
+	}
+}
+
+func TestUnregisterShims(t *testing.T) {
+	t.Setenv("NVY_DIR", t.TempDir())
+
+	RegisterShims("go", []string{"go", "gofmt"})     //nolint:errcheck
+	RegisterShims("node", []string{"node", "npm"})   //nolint:errcheck
+
+	removed, err := UnregisterShims("go")
+	if err != nil {
+		t.Fatalf("UnregisterShims: %v", err)
+	}
+	if len(removed) != 2 {
+		t.Errorf("expected 2 removed, got %d: %v", len(removed), removed)
+	}
+	if !slices.Contains(removed, "go") || !slices.Contains(removed, "gofmt") {
+		t.Errorf("expected [go gofmt] in removed list, got %v", removed)
+	}
+
+	// go shims should be gone.
+	if _, ok := LookupShim("go"); ok {
+		t.Error("go shim should be removed")
+	}
+	if _, ok := LookupShim("gofmt"); ok {
+		t.Error("gofmt shim should be removed")
+	}
+
+	// node shims should still be present.
+	if tool, ok := LookupShim("node"); !ok || tool != "node" {
+		t.Errorf("node shim should still be present, got %q %v", tool, ok)
+	}
+}
+
+func TestUnregisterShims_Noop(t *testing.T) {
+	t.Setenv("NVY_DIR", t.TempDir())
+
+	// Unregistering a tool with no shims should return nil, nil.
+	removed, err := UnregisterShims("python")
+	if err != nil {
+		t.Errorf("UnregisterShims on unregistered tool: %v", err)
+	}
+	if len(removed) != 0 {
+		t.Errorf("expected empty removed list, got %v", removed)
 	}
 }

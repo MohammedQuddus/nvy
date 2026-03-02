@@ -53,6 +53,16 @@ func AllGlobals() (map[string]string, error) {
 	return out, nil
 }
 
+// DeleteGlobal removes tool from global.json. It is a no-op if tool has no entry.
+func DeleteGlobal(tool string) error {
+	s, err := load()
+	if err != nil {
+		return err
+	}
+	delete(s.Versions, tool)
+	return save(s)
+}
+
 // ── Owner tracking ───────────────────────────────────────────────────────────
 // owners.json maps binary name → canonical plugin name.
 // e.g. {"go": "go", "gofmt": "go", "node": "node", "npm": "node"}
@@ -73,6 +83,26 @@ func RegisterShims(tool string, binaries []string) error {
 		s.Owners[b] = tool
 	}
 	return saveOwners(s)
+}
+
+// UnregisterShims removes all binaries owned by tool from owners.json.
+// Returns the list of binary names removed.
+func UnregisterShims(tool string) ([]string, error) {
+	s, err := loadOwners()
+	if err != nil {
+		return nil, err
+	}
+	var removed []string
+	for bin, owner := range s.Owners {
+		if owner == tool {
+			removed = append(removed, bin)
+			delete(s.Owners, bin)
+		}
+	}
+	if len(removed) == 0 {
+		return nil, nil
+	}
+	return removed, saveOwners(s)
 }
 
 // LookupShim returns the tool name that owns binary, e.g. "npm" → "node".

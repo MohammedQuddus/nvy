@@ -39,4 +39,5 @@ func init() {
 	rootCmd.AddCommand(globalCmd)
 	rootCmd.AddCommand(localCmd)
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(uninstallCmd)
 }

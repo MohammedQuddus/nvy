@@ -34,3 +34,6 @@ jobs:
 
       - name: Verify binary
         run: ./nvy --version
+
+      - name: Check coverage threshold
+        run: make cover-check
